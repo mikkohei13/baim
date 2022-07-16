@@ -4,7 +4,7 @@ import pandas as pd
 import datetime
 import re
 
-def get_datafile_list(directory, limit):
+def get_datafile_list(directory, file_number_limit):
   datafile_list = []
   objects = os.listdir(directory)
   i = 0
@@ -12,7 +12,7 @@ def get_datafile_list(directory, limit):
     if filename.lower().endswith(".results.csv"):
       datafile_list.append(filename)
       i = i + 1
-    if i >= limit:
+    if i >= file_number_limit:
         break
 
   return datafile_list
@@ -25,6 +25,7 @@ def datetime_from_filename(filename):
 
     # Note: order of these if-clauses are important.
     # Wildlife Acoustics SM4
+    # TODO: Not UTC?
     pattern = re.compile("[A-Z0-9]{5}\_\d{8}\_\d{6}")
     if pattern.match(datepart):
         datepart = datepart[6:]
@@ -52,17 +53,21 @@ def audio_filename_from_filename(filename):
 
 
 dir = "/mnt/c/Users/mikko/Documents/Audiomoth_2022/20220311-25-Nissinmäki"
-dir = "/mnt/c/Users/mikko/Documents/_linux"
 dir = "./test"
+dir = "/mnt/c/Users/mikko/Documents/_linux/baim"
 
-limit = 2000
+subdir_name = dir[(dir.rindex("/") + 1):]
+export_file_path = dir + "/" + subdir_name + "-predictions.xlsx"
 
-datafile_list = get_datafile_list(dir, limit)
+file_number_limit = 3
+
+datafile_list = get_datafile_list(dir, file_number_limit)
 datafile_list.sort()
 print(datafile_list)
 
-df_list = []
+dataframe_list = []
 
+# Do batch operations for each file
 for filename in datafile_list:
     df = pd.read_csv(dir + "/" + filename)
     if df.empty:
@@ -72,17 +77,20 @@ for filename in datafile_list:
     df['Filename'] = audio_filename_from_filename(filename)
 
     # Datetime
-    df['Date (UTC)'] = datetime_from_filename(filename)
+    df['File start'] = datetime_from_filename(filename)
 
     # Start time in h:m:s
     df['Start (h:m:s)'] = df.apply(lambda row: str(datetime.timedelta(seconds= row['Start (s)'])), axis = 1)
 
     # Confidence comma-separated
-    df['Confidence (cs)'] = df.apply(lambda row: str(row['Confidence']).replace(".", ","), axis = 1)
+    # Not needed when exported as Excel file
+#    df['Confidence (cs)'] = df.apply(lambda row: str(row['Confidence']).replace(".", ","), axis = 1)
 
-    df_list.append(df)
+    dataframe_list.append(df)
     print("Handled file " + filename)
 
-full_df = pd.concat(df_list, ignore_index=True) # TODO: does not work properly: only stores the last list item data
+full_dataframe = pd.concat(dataframe_list, ignore_index=True) # TODO: does not work properly: only stores the last list item data
 
-full_df.to_csv(dir + "/birdnet-output.csv", index=True)
+#full_dataframe.to_csv(dir + "/birdnet-output.csv", index=True)
+
+full_dataframe.to_excel(export_file_path, index=True, index_label="Row", sheet_name="Predictions", freeze_panes=(1, 1))

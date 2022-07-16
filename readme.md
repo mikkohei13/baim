@@ -9,3 +9,5 @@ Personal notes on Google Docs.
     source .venv/bin/activate
     pip install -r requirements.txt
 
+    deactivate
+
