@@ -4,6 +4,9 @@ import pandas as pd
 import datetime
 import re
 
+pd.io.formats.excel.ExcelFormatter.header_style = None
+
+
 def get_datafile_list(directory, file_number_limit):
   datafile_list = []
   objects = os.listdir(directory)
