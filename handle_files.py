@@ -60,6 +60,10 @@ subdir_name = dir[(dir.rindex("/") + 1):]
 export_file_path = dir + "/" + subdir_name + "-predictions.xlsx"
 
 file_number_limit = 3
+filter_limit = 0.5
+
+filtered_species_sheet_name = "Species conf " + str(filter_limit)
+
 
 datafile_list = get_datafile_list(dir, file_number_limit)
 datafile_list.sort()
@@ -70,6 +74,8 @@ dataframe_list = []
 # Do batch operations for each file
 for filename in datafile_list:
     df = pd.read_csv(dir + "/" + filename)
+
+    # Skip empty files
     if df.empty:
         continue
 
@@ -82,15 +88,28 @@ for filename in datafile_list:
     # Start time in h:m:s
     df['Start (h:m:s)'] = df.apply(lambda row: str(datetime.timedelta(seconds= row['Start (s)'])), axis = 1)
 
-    # Confidence comma-separated
-    # Not needed when exported as Excel file
-#    df['Confidence (cs)'] = df.apply(lambda row: str(row['Confidence']).replace(".", ","), axis = 1)
-
     dataframe_list.append(df)
+
     print("Handled file " + filename)
 
-full_dataframe = pd.concat(dataframe_list, ignore_index=True) # TODO: does not work properly: only stores the last list item data
+# Combine per-file dataframes
+full_dataframe = pd.concat(dataframe_list, ignore_index=True)
 
-#full_dataframe.to_csv(dir + "/birdnet-output.csv", index=True)
+# Filter
+filtered_dataframe = full_dataframe[full_dataframe['Confidence'] >= filter_limit]
 
-full_dataframe.to_excel(export_file_path, index=True, index_label="Row", sheet_name="Predictions", freeze_panes=(1, 1))
+# Count species occurrences
+species_list = filtered_dataframe.groupby(['Scientific name']).size()
+# This makes a dataframe with 0 as the column name
+species_dataframe = pd.DataFrame(species_list)
+# Rename column
+species_dataframe.columns = ['Count']
+# Sot descending
+species_dataframe.sort_values("Count", ascending=False, inplace=True)
+
+#print(species_dataframe)
+#exit()
+
+with pd.ExcelWriter(export_file_path) as writer:  
+    full_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name="Predictions", freeze_panes=(1, 1))
+    species_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name=filtered_species_sheet_name, freeze_panes=(1, 1))
