@@ -5,18 +5,22 @@ import datetime
 import re
 
 import species
+import audio
 
 pd.io.formats.excel.ExcelFormatter.header_style = None
 
 # Settings
 dir = "./test"
-dir = "/mnt/c/Users/mikko/Documents/Audiomoth_2021/20210922-1008-Ks-SM4"
 dir = "/mnt/c/Users/mikko/Documents/_linux/baim"
+dir = "/mnt/c/Users/mikko/Documents/Audiomoth_2022/20220412-23-Tillinmäki"
 
 file_extension = "wav" # Don't include dot here
 
-file_number_limit = 3000 # Limit for debugging
-filter_limit = 0.75
+file_number_limit = 1 # Limit for debugging
+filter_limit = 0.38
+
+file_number_limit = 5 # Limit for debugging
+filter_limit = 0.85
 
 
 def get_datafile_list(directory, file_number_limit):
@@ -112,10 +116,42 @@ full_dataframe = full_dataframe[new_index]
 
 ###################################
 # Get list of species with high confidence
-filtered_dataframe = full_dataframe[full_dataframe['Confidence'] >= filter_limit]
+df = full_dataframe[full_dataframe['Confidence'] >= filter_limit]
+df.reset_index(inplace = True, drop = True)
+
+print(df)
+
+#exit()
+
+segment_dir = dir + "/report"
+
+# TODO: check if the audio subdir name is data or Data
+
+audio.create_dir(segment_dir)
+
+for index in range(len(df)):
+
+    audio_filepath = dir + "/Data/" + df['Filename'].loc[index]
+    start_sec = int(df['Start (s)'].loc[index])
+    end_sec = int(df['End (s)'].loc[index])
+
+    props = dict(
+        audio_filepath = audio_filepath,
+        audio_filename = df['Filename'].loc[index],
+        segment_dir = segment_dir,
+        start_sec = start_sec,
+        end_sec = end_sec,
+        scientific_name = df['Scientific name'].loc[index],
+        confidence = df['Confidence'].loc[index]
+        )
+
+    audio.make_audio_segment(props)
+
+exit()
+
 
 # Count species occurrences
-species_list = filtered_dataframe.groupby(['Scientific name']).size()
+species_list = df.groupby(['Scientific name']).size()
 # This makes a dataframe with 0 as the column name
 species_dataframe = pd.DataFrame(species_list)
 # Rename column
@@ -123,8 +159,6 @@ species_dataframe.columns = ['Count']
 # Sot descending
 species_dataframe.sort_values("Count", ascending=False, inplace=True)
 
-#print(species_dataframe)
-#exit()
 
 ###################################
 # Create Excel file
