@@ -33,3 +33,7 @@ def make_audio_segment(props):
 
     print("exported segment " + segment_filename)
 
+    return segment_filename
+
+
+
