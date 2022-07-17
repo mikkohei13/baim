@@ -10,8 +10,8 @@ pd.io.formats.excel.ExcelFormatter.header_style = None
 
 # Settings
 dir = "./test"
+dir = "/mnt/c/Users/mikko/Documents/Audiomoth_2021/20210922-1008-Ks-SM4"
 dir = "/mnt/c/Users/mikko/Documents/_linux/baim"
-dir = "/mnt/c/Users/mikko/Documents/Audiomoth_2021/20210922-1008-Ks-SM4"'
 
 file_extension = "wav" # Don't include dot here
 
