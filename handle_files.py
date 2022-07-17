@@ -8,6 +8,16 @@ import species
 
 pd.io.formats.excel.ExcelFormatter.header_style = None
 
+# Settings
+dir = "./test"
+dir = "/mnt/c/Users/mikko/Documents/_linux/baim"
+dir = "/mnt/c/Users/mikko/Documents/Audiomoth_2021/20210922-1008-Ks-SM4"'
+
+file_extension = "wav" # Don't include dot here
+
+file_number_limit = 3000 # Limit for debugging
+filter_limit = 0.75
+
 
 def get_datafile_list(directory, file_number_limit):
   datafile_list = []
@@ -50,32 +60,28 @@ def datetime_from_filename(filename):
     return datepart
 
 
-def audio_filename_from_filename(filename):
-    # Problem: cannot get original file extension, since it's not available on the Birdnet analysis files
-    # Presume ".wav"
+def audio_filename_from_filename(filename, file_extension):
+    # Have to have file extension as parameter provided by user, since it's not available on the Birdnet analysis files
     parts = filename.split(".")
-    return parts[0] + ".wav"
+    return parts[0] + "." + file_extension
 
 
-dir = "./test"
-dir = "/mnt/c/Users/mikko/Documents/_linux/baim"
-dir = "/mnt/c/Users/mikko/Documents/Audiomoth_2021/20210922-1008-Ks-SM4"
-
+###################################
+# Setup
 subdir_name = dir[(dir.rindex("/") + 1):]
 export_file_path = dir + "/" + subdir_name + "-predictions.xlsx"
 
-file_number_limit = 1000 # Debug
-filter_limit = 0.75
-
 filtered_species_sheet_name = "Species conf " + str(filter_limit)
-
 
 datafile_list = get_datafile_list(dir, file_number_limit)
 datafile_list.sort()
-print(datafile_list)
+
+print(datafile_list) # debug
 
 dataframe_list = []
 
+
+###################################
 # Do batch operations for each file
 for filename in datafile_list:
     df = pd.read_csv(dir + "/" + filename)
@@ -85,7 +91,7 @@ for filename in datafile_list:
         continue
 
     # ~Audio filename
-    df['Filename'] = audio_filename_from_filename(filename)
+    df['Filename'] = audio_filename_from_filename(filename, file_extension)
 
     # Datetime
     df['File start'] = datetime_from_filename(filename)
@@ -104,25 +110,8 @@ full_dataframe = pd.concat(dataframe_list, ignore_index=True)
 new_index = ["Start (s)", "End (s)", "Common name", "Scientific name", "Filename", "File start", "Confidence", "Start (h:m:s)"]
 full_dataframe = full_dataframe[new_index]
 
-
-'''
-# Add indicator about changing filename. BUT: This is useless when data is filtered.
-full_dataframe["New file"] = ""
-prev_filename = ""
-for ind in full_dataframe.index:
-#    print("Prev " + prev_filename)
-#    print("Current " + full_dataframe['Filename'][ind])
-
-    if full_dataframe['Filename'][ind] != prev_filename:
-        full_dataframe["New file"][ind] = "TRUE"
-
-
-    prev_filename = full_dataframe['Filename'][ind]
-#    print(df['Name'][ind], df['Stream'][ind])
-'''
-
-
-# Filter
+###################################
+# Get list of species with high confidence
 filtered_dataframe = full_dataframe[full_dataframe['Confidence'] >= filter_limit]
 
 # Count species occurrences
@@ -137,11 +126,14 @@ species_dataframe.sort_values("Count", ascending=False, inplace=True)
 #print(species_dataframe)
 #exit()
 
+###################################
+# Create Excel file
 writer = pd.ExcelWriter(export_file_path)
 
 full_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name="Predictions", freeze_panes=(1, 1))
 species_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name=filtered_species_sheet_name, freeze_panes=(1, 1))
 
+# Excel file settings
 #workbook  = writer.book
 worksheet_prediction = writer.sheets["Predictions"]
 worksheet_prediction.column_dimensions["D"].width = 20
@@ -156,4 +148,5 @@ worksheet_species.column_dimensions["A"].width = 22
 
 writer.save()
 
-print(species.non_finnish_species)
+
+#print(species.non_finnish_species) # debug
