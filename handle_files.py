@@ -4,6 +4,8 @@ import pandas as pd
 import datetime
 import re
 
+import species
+
 pd.io.formats.excel.ExcelFormatter.header_style = None
 
 
@@ -55,14 +57,14 @@ def audio_filename_from_filename(filename):
     return parts[0] + ".wav"
 
 
-dir = "/mnt/c/Users/mikko/Documents/Audiomoth_2022/20220311-25-Nissinmäki"
+dir = "/mnt/c/Users/mikko/Documents/Audiomoth_2022/20210922-1008-Ks-SM4"
 dir = "./test"
 dir = "/mnt/c/Users/mikko/Documents/_linux/baim"
 
 subdir_name = dir[(dir.rindex("/") + 1):]
 export_file_path = dir + "/" + subdir_name + "-predictions.xlsx"
 
-file_number_limit = 3
+file_number_limit = 3 # Debug
 filter_limit = 0.5
 
 filtered_species_sheet_name = "Species conf " + str(filter_limit)
@@ -98,6 +100,28 @@ for filename in datafile_list:
 # Combine per-file dataframes
 full_dataframe = pd.concat(dataframe_list, ignore_index=True)
 
+# Reorder columns
+new_index = ["Start (s)", "End (s)", "File start", "Common name", "Scientific name", "Filename", "Confidence", "Start (h:m:s)"]
+full_dataframe = full_dataframe[new_index]
+
+
+'''
+# Add indicator about changing filename. BUT: This is useless when data is filtered.
+full_dataframe["New file"] = ""
+prev_filename = ""
+for ind in full_dataframe.index:
+#    print("Prev " + prev_filename)
+#    print("Current " + full_dataframe['Filename'][ind])
+
+    if full_dataframe['Filename'][ind] != prev_filename:
+        full_dataframe["New file"][ind] = "TRUE"
+
+
+    prev_filename = full_dataframe['Filename'][ind]
+#    print(df['Name'][ind], df['Stream'][ind])
+'''
+
+
 # Filter
 filtered_dataframe = full_dataframe[full_dataframe['Confidence'] >= filter_limit]
 
@@ -113,6 +137,15 @@ species_dataframe.sort_values("Count", ascending=False, inplace=True)
 #print(species_dataframe)
 #exit()
 
-with pd.ExcelWriter(export_file_path) as writer:  
-    full_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name="Predictions", freeze_panes=(1, 1))
-    species_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name=filtered_species_sheet_name, freeze_panes=(1, 1))
+writer = pd.ExcelWriter(export_file_path)
+
+full_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name="Predictions", freeze_panes=(1, 1))
+species_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name=filtered_species_sheet_name, freeze_panes=(1, 1))
+
+#workbook  = writer.book
+#worksheet_prediction = writer.sheets[Predictions]
+#worksheet_prediction.set_column(0,  max_col - 1, 12)
+
+writer.save()
+
+print(species.non_finnish_species)
