@@ -57,15 +57,15 @@ def audio_filename_from_filename(filename):
     return parts[0] + ".wav"
 
 
-dir = "/mnt/c/Users/mikko/Documents/Audiomoth_2022/20210922-1008-Ks-SM4"
 dir = "./test"
 dir = "/mnt/c/Users/mikko/Documents/_linux/baim"
+dir = "/mnt/c/Users/mikko/Documents/Audiomoth_2021/20210922-1008-Ks-SM4"
 
 subdir_name = dir[(dir.rindex("/") + 1):]
 export_file_path = dir + "/" + subdir_name + "-predictions.xlsx"
 
-file_number_limit = 3 # Debug
-filter_limit = 0.5
+file_number_limit = 1000 # Debug
+filter_limit = 0.75
 
 filtered_species_sheet_name = "Species conf " + str(filter_limit)
 
@@ -101,7 +101,7 @@ for filename in datafile_list:
 full_dataframe = pd.concat(dataframe_list, ignore_index=True)
 
 # Reorder columns
-new_index = ["Start (s)", "End (s)", "File start", "Common name", "Scientific name", "Filename", "Confidence", "Start (h:m:s)"]
+new_index = ["Start (s)", "End (s)", "Common name", "Scientific name", "Filename", "File start", "Confidence", "Start (h:m:s)"]
 full_dataframe = full_dataframe[new_index]
 
 
@@ -143,8 +143,16 @@ full_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name="Predi
 species_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name=filtered_species_sheet_name, freeze_panes=(1, 1))
 
 #workbook  = writer.book
-#worksheet_prediction = writer.sheets[Predictions]
-#worksheet_prediction.set_column(0,  max_col - 1, 12)
+worksheet_prediction = writer.sheets["Predictions"]
+worksheet_prediction.column_dimensions["D"].width = 20
+worksheet_prediction.column_dimensions["E"].width = 20
+worksheet_prediction.column_dimensions["F"].width = 20
+worksheet_prediction.column_dimensions["G"].width = 20
+
+worksheet_prediction.auto_filter.ref = worksheet_prediction.dimensions
+
+worksheet_species = writer.sheets[filtered_species_sheet_name]
+worksheet_species.column_dimensions["A"].width = 22
 
 writer.save()
 
