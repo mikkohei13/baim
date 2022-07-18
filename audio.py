@@ -3,10 +3,13 @@ from pydub import AudioSegment
 import os
 
 def create_dir(dir_path):
-  if not os.path.exists(dir_path):
-    os.makedirs(dir_path)
-    print("Created dir " + dir_path)
-  return True
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+        print("Created dir " + dir_path)
+        return True
+    
+    print("Dir already exists " + dir_path)
+    return True
 
 
 def make_audio_segment(props):
@@ -28,7 +31,7 @@ def make_audio_segment(props):
 
     segment_path = props["segment_dir"] + "/" + segment_filename
 
-    audio_segment = audio_full[(props["start_sec"] * 1000):(props["end_sec"] * 1000)]
+    audio_segment = audio_full[(start_sec * 1000):(end_sec * 1000)]
     audio_segment.export(segment_path, format="wav") # TODO: flac or mp3? requires ffmpeg
 
     print("exported segment " + segment_filename)

@@ -4,7 +4,7 @@ import pandas as pd
 import datetime
 import re
 
-import species
+import taxa
 import audio
 import report
 
@@ -12,18 +12,15 @@ pd.io.formats.excel.ExcelFormatter.header_style = None
 
 # Settings
 dir = "./test"
-dir = "/mnt/c/Users/mikko/Documents/_linux/baim"
-dir = "/mnt/c/Users/mikko/Documents/Audiomoth_2022/20220412-23-Tillinmäki"
+dir = "/mnt/c/Users/mikko/Documents/Audiomoth_2022/20220408-21-Bosmalm-W"
+dir = "/mnt/c/Users/mikko/Documents/_linux/20210416-25-Furubacka"
 
 file_extension = "wav" # Don't include dot here
 
-file_number_limit = 1 # Limit for debugging
-filter_limit = 0.38
-
-file_number_limit = 7 # Limit for debugging
+file_number_limit = 2000 # Limit for debugging
 filter_limit = 0.75
 
-max_segments_per_species = 2
+max_segments_per_species = 7
 
 
 def get_datafile_list(directory, file_number_limit):
@@ -76,7 +73,7 @@ def audio_filename_from_filename(filename, file_extension):
 ###################################
 # Setup
 subdir_name = dir[(dir.rindex("/") + 1):]
-export_file_path = dir + "/" + subdir_name + "-predictions.xlsx"
+export_file_path = dir + "/_baim_" + subdir_name + ".xlsx"
 
 filtered_species_sheet_name = "Species conf " + str(filter_limit)
 
@@ -132,7 +129,31 @@ species_dataframe.columns = ['Count']
 # Sot descending
 species_dataframe.sort_values("Count", ascending = False, inplace = True)
 
-print(df)
+
+###################################
+# Create Excel file
+writer = pd.ExcelWriter(export_file_path)
+
+full_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name="Predictions", freeze_panes=(1, 1))
+species_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name=filtered_species_sheet_name, freeze_panes=(1, 1))
+
+# Excel file settings
+#workbook  = writer.book
+worksheet_prediction = writer.sheets["Predictions"]
+worksheet_prediction.column_dimensions["D"].width = 20
+worksheet_prediction.column_dimensions["E"].width = 20
+worksheet_prediction.column_dimensions["F"].width = 20
+worksheet_prediction.column_dimensions["G"].width = 20
+
+worksheet_prediction.auto_filter.ref = worksheet_prediction.dimensions
+
+worksheet_species = writer.sheets[filtered_species_sheet_name]
+worksheet_species.column_dimensions["A"].width = 22
+
+writer.save()
+
+###################################
+# Create report
 
 # Pick rows to make segments of
 
@@ -142,6 +163,10 @@ picked_rows = dict()
 # First >=0.9
 for index in range(len(df)):
     sciname = df['Scientific name'].loc[index]
+
+    # Skip if non-Finnish
+    if taxa.is_non_finnish(sciname):
+        continue
 
     # Skip if have enough
     if sciname in picked_taxa:
@@ -159,20 +184,22 @@ for index in range(len(df)):
 for index in range(len(df)):
     sciname = df['Scientific name'].loc[index]
 
+    # Skip if non-Finnish
+    if taxa.is_non_finnish(sciname):
+        continue
+
     # Skip if have enough
     if sciname in picked_taxa:
         if picked_taxa[sciname] >= max_segments_per_species:
             continue
 
-    if (df['Confidence'].loc[index] >= 0.75 and df['Confidence'].loc[index] < 0.9):
+    if (df['Confidence'].loc[index] >= filter_limit and df['Confidence'].loc[index] < 0.9):
         picked_rows[index] = sciname
         if sciname in picked_taxa:
             picked_taxa[sciname] = picked_taxa[sciname] + 1
         else:
             picked_taxa[sciname] = 1
 
-segment_dir = dir + "/report"
-report = report.report(segment_dir)
 
 # TODO: check if the audio subdir name is data or Data
 
@@ -183,8 +210,10 @@ picked_rows = {k: v for k, v in sorted(picked_rows.items(), key=lambda item: ite
 print(picked_rows)
 print(picked_taxa)
 
-
+segment_dir = dir + "/report"
 audio.create_dir(segment_dir)
+report = report.report(segment_dir)
+
 
 print("========================")
 html = ""
@@ -215,7 +244,9 @@ for index, sciname in picked_rows.items():
         start_sec = start_sec,
         end_sec = end_sec,
         scientific_name = row['Scientific name'],
-        confidence = row['Confidence']
+        confidence = row['Confidence'],
+        file_start_datetime = row['File start'],
+        segment_start = row['Start (h:m:s)']
         )
 
     segment_filename = audio.make_audio_segment(props)
@@ -223,32 +254,9 @@ for index, sciname in picked_rows.items():
     report.add_segment(props, segment_filename)
 
 
-print(html)
-
-exit()
+#print(html)
 
 
-###################################
-# Create Excel file
-writer = pd.ExcelWriter(export_file_path)
-
-full_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name="Predictions", freeze_panes=(1, 1))
-species_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name=filtered_species_sheet_name, freeze_panes=(1, 1))
-
-# Excel file settings
-#workbook  = writer.book
-worksheet_prediction = writer.sheets["Predictions"]
-worksheet_prediction.column_dimensions["D"].width = 20
-worksheet_prediction.column_dimensions["E"].width = 20
-worksheet_prediction.column_dimensions["F"].width = 20
-worksheet_prediction.column_dimensions["G"].width = 20
-
-worksheet_prediction.auto_filter.ref = worksheet_prediction.dimensions
-
-worksheet_species = writer.sheets[filtered_species_sheet_name]
-worksheet_species.column_dimensions["A"].width = 22
-
-writer.save()
 
 
 #print(species.non_finnish_species) # debug
