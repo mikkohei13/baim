@@ -12,15 +12,15 @@ pd.io.formats.excel.ExcelFormatter.header_style = None
 
 # Settings
 dir = "./test"
-dir = "/mnt/c/Users/mikko/Documents/Audiomoth_2022/20220408-21-Bosmalm-W"
-dir = "/mnt/c/Users/mikko/Documents/_linux/20210416-25-Furubacka"
+dir = "/mnt/c/Users/mikko/Documents/_linux/Majkärr"
+dir = "/mnt/c/Users/mikko/Documents/Audiomoth_2022/Mössenkärr"
 
 file_extension = "wav" # Don't include dot here
 
 file_number_limit = 2000 # Limit for debugging
 filter_limit = 0.75
 
-max_segments_per_species = 7
+max_segments_per_species = 5
 
 
 def get_datafile_list(directory, file_number_limit):
@@ -50,7 +50,13 @@ def datetime_from_filename(filename):
         datepart = datepart[6:]
         return datetime.datetime.strptime(datepart, "%Y%m%d_%H%M%S")
 
-    # Audiomoth new firmware
+    # Audiomoth firmaware 1.8.0, with T at the end
+    pattern = re.compile("\d{8}\_\d{6}T")
+    if pattern.match(datepart):
+        datepart = datepart[0:14]
+        return datetime.datetime.strptime(datepart, "%Y%m%d_%H%M%S")
+
+    # Audiomoth firmaware 1.7.1
     pattern = re.compile("\d{8}\_\d{6}")
     if pattern.match(datepart):
         return datetime.datetime.strptime(datepart, "%Y%m%d_%H%M%S")
@@ -118,7 +124,10 @@ full_dataframe = full_dataframe[new_index]
 # Get list of species with high confidence
 # this dataframe is named just "df" for shortness and convention
 df = full_dataframe[full_dataframe['Confidence'] >= filter_limit]
-df.reset_index(inplace = True, drop = True)
+
+# Shuffle, so that audio snippets represent a random sample of the calls 
+df = df.sample(frac=1).reset_index(drop = True)
+#df.reset_index(inplace = True, drop = True)
 
 # Count species occurrences
 species_list = df.groupby(['Scientific name']).size()
@@ -128,7 +137,6 @@ species_dataframe = pd.DataFrame(species_list)
 species_dataframe.columns = ['Count']
 # Sot descending
 species_dataframe.sort_values("Count", ascending = False, inplace = True)
-
 
 ###################################
 # Create Excel file

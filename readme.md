@@ -35,6 +35,17 @@ Creating audio snipperts & spectrograms of species
         - times (also in ISO format that Vihko uses)
 - Save html report
 
+Todo:
+
+DONE: Randomixe dataframe order before picking segments? To avoid having 5+ segments of the same local bird.
+
+To get most probable identifications, sort by confidence desc.
+To get a sample of all identifications above the threshold, shuffle, to get good idea of the variety.
+
+Exceliin sarakkeiksi mysö:
+Laji - Määritys	Määrä - Havainto	Pesimävarmuusindeksi - Havainto	Lisätiedot - Havainto	Kokoelma/Avainsanat - Havainto
+
+
 
 # Setup with venv
 

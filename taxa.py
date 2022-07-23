@@ -20,13 +20,14 @@ def is_non_finnish(taxon):
         "Piranga ",
         "Myiarchus ",
         "Brotogeris ",
-        "Dryobates ",
+        "Geothlypis trichas",
         "Setophaga ",
         "Dendrocygna ",
         "Hylocichla mustelina",
         "Turdus migratorius",
         "Setophaga ",
         "Cyanocitta cristata",
+        "Manorina melanophrys",
         
         "LAST ITEM WITHOUT COMMA"
         ]
