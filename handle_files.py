@@ -13,7 +13,7 @@ pd.io.formats.excel.ExcelFormatter.header_style = None
 # Settings
 dir = "./test"
 dir = "/mnt/c/Users/mikko/Documents/_linux/Majkärr"
-dir = "/mnt/c/Users/mikko/Documents/Audiomoth_2022/Mössenkärr"
+dir = "/mnt/c/Users/mikko/Documents/Audiomoth_2022/baimtest"
 
 file_extension = "wav" # Don't include dot here
 

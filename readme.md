@@ -1,7 +1,29 @@
 
 
-Personal notes on Google Docs.
+Spplication to convert bird sound analysis made with BirdNET into a more usable format:
+* Excel file with sheets for
+   * Predictions with filename, and position in h:mm:ss format, to make finding the sound eaier
+   * Number of predictions per species above given threshold, to allow seeing what are the common vs. less common species
+* HTML report page with five audio clips of each species. This makes it easy to check if predictions for each species is reliable or not.
 
+# Setup with venv
+
+    git clone https://github.com/mikkohei13/baim.git
+    apt install python3.10-venv
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements.txt
+
+    deactivate
+
+# Usage
+
+- Analyze audio files with BirdNET
+- Have birdNET result files in a root directory and audio files in Data directory 
+- Set path to directory to handle_files.py
+- Run python3 ´handle_files.py´
+
+# How it works
 
 Creating audio snipperts & spectrograms of species
 
@@ -35,7 +57,9 @@ Creating audio snipperts & spectrograms of species
         - times (also in ISO format that Vihko uses)
 - Save html report
 
-Todo:
+# Todo:
+
+Handle flac and mp3 files
 
 DONE: Randomixe dataframe order before picking segments? To avoid having 5+ segments of the same local bird.
 
@@ -46,13 +70,4 @@ Exceliin sarakkeiksi mysö:
 Laji - Määritys	Määrä - Havainto	Pesimävarmuusindeksi - Havainto	Lisätiedot - Havainto	Kokoelma/Avainsanat - Havainto
 
 
-
-# Setup with venv
-
-    git clone https://github.com/mikkohei13/baim.git
-    python3 -m venv .venv
-    source .venv/bin/activate
-    pip install -r requirements.txt
-
-    deactivate
 
