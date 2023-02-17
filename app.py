@@ -1,7 +1,7 @@
 import tkinter as tk
-import time
 import os
 import handle_files
+import sys
 
 def resource_path(relative_path):
     try:
@@ -36,6 +36,7 @@ def run_application():
 
     # Update the status label to show that the process has started
     status_label.configure(text="Process started...")
+    root.update()
 
     # Perform some time-consuming task here...
     result = handle_files.handle_files(dir, threshold)
@@ -45,6 +46,7 @@ def run_application():
     else:
         status_label.configure(text="Directory not found.")
 
+    root.update()
     return
 
 
