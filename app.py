@@ -1,5 +1,16 @@
 import tkinter as tk
 import time
+import os
+
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 
 def run_application():
     print(f"LOG: {analyze_directory.get()}, {threshold_value.get()}")
@@ -16,7 +27,6 @@ def run_application():
     # Update the status label to show that the process has finished
     status_label.configure(text="Process finished!")
     return
-
 
 
 def validate_float(new_value):
@@ -42,7 +52,7 @@ root.option_add("*background", "#E6E8E9")
 #root.columnconfigure(0, minsize=140)
 
 # Logo image
-image = tk.PhotoImage(file="baim-icon.png")
+image = tk.PhotoImage(file = resource_path("baim-icon.png"))
 image_label = tk.Label(root, image=image)
 image_label.grid(row=0, column=0, padx=10, pady=10, sticky="W")
 
@@ -53,7 +63,7 @@ text_label.grid(row=0, column=1, padx=10, pady=40, sticky="N")
 # Create input fields
 analyze_directory_label = tk.Label(root, text="Directory for BirdNET files")
 analyze_directory_label.grid(row=1, column=0, columnspan=2, padx=10, pady=10, sticky="W")
-analyze_directory = tk.Entry(root, width=65, background="#F5F5F5")
+analyze_directory = tk.Entry(root, width=70, background="#F5F5F5")
 analyze_directory.grid(row=2, column=0, columnspan=2, padx=10, pady="0", sticky="W")
 
 threshold_value_label = tk.Label(root, text="Prediction threshold (between 0.01-0.99)")

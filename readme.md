@@ -10,7 +10,7 @@ Spplication to convert bird sound analysis made with BirdNET into a more usable 
 
     git clone https://github.com/mikkohei13/baim.git
     apt install python3.10-venv
-    python3 -m venv .venv
+    python -m venv .venv
     source .venv/bin/activate
     pip install -r requirements.txt
 
@@ -24,9 +24,13 @@ Spplication to convert bird sound analysis made with BirdNET into a more usable 
 - Run python3 ´handle_files.py´
 
 
-### Creatuing GUI app
+### Compiling the app on Windows
 
-- ´apt-get install python3-tk´
+- Setup Python on Windows
+- Set Python to Powershell profile
+- Copy files to Windows: ´cp -r ./ /mnt/c/Users/mikko/Documents/compile/´
+- Install requirements: ´pip install -r requirements.txt´
+- Compile the app: ´pyinstaller --windowed --add-data "baim-icon.png;." --onefile app.py´
 
 
 # How it works
