@@ -8,33 +8,26 @@ import taxa
 import audio
 import report
 
-pd.io.formats.excel.ExcelFormatter.header_style = None
-
-# Settings
-dir = "./test"
-dir = "/mnt/c/Users/mikko/Documents/_linux/Majkärr"
-dir = "/mnt/c/Users/mikko/Documents/Audiomoth_2022/baimtest"
-
-file_extension = "wav" # Don't include dot here
-
-file_number_limit = 2000 # Limit for debugging
-filter_limit = 0.75
-
-max_segments_per_species = 5
-
 
 def get_datafile_list(directory, file_number_limit):
-  datafile_list = []
-  objects = os.listdir(directory)
-  i = 0
-  for filename in objects:
-    if filename.lower().endswith(".results.csv"):
-      datafile_list.append(filename)
-      i = i + 1
-    if i >= file_number_limit:
-        break
+    datafile_list = []
 
-  return datafile_list
+    try:
+        objects = os.listdir(directory)
+    except FileNotFoundError:
+        print('Directory not found')
+        return False
+    else:
+#        print(files)
+        i = 0
+        for filename in objects:
+            if filename.lower().endswith(".results.csv"):
+                datafile_list.append(filename)
+                i = i + 1
+            if i >= file_number_limit:
+                break
+
+        return datafile_list
 
 
 # Todo: identify filename format: Audiomoth & SM4
@@ -76,195 +69,216 @@ def audio_filename_from_filename(filename, file_extension):
     return parts[0] + "." + file_extension
 
 
-###################################
-# Setup
-subdir_name = dir[(dir.rindex("/") + 1):]
-export_file_path = dir + "/_baim_" + subdir_name + ".xlsx"
+def handle_files(dir, threshold):
 
-filtered_species_sheet_name = "Species conf " + str(filter_limit)
+    pd.io.formats.excel.ExcelFormatter.header_style = None
 
-datafile_list = get_datafile_list(dir, file_number_limit)
-datafile_list.sort()
+    file_extension = "wav" # Don't include dot here
 
-print(datafile_list) # debug
+    file_number_limit = 2000 # Limit for debugging
+    filter_limit = float(threshold)
 
-dataframe_list = []
+    max_segments_per_species = 5
 
 
-###################################
-# Do batch operations for each file
-for filename in datafile_list:
-    df = pd.read_csv(dir + "/" + filename)
+    ###################################
+    # Setup
+    subdir_name = dir[(dir.rindex("/") + 1):]
+    export_file_path = dir + "/_baim_" + subdir_name + ".xlsx"
 
-    # Skip empty files
-    if df.empty:
-        continue
+    filtered_species_sheet_name = "Species conf " + str(filter_limit)
 
-    # ~Audio filename
-    df['Filename'] = audio_filename_from_filename(filename, file_extension)
+    datafile_list = get_datafile_list(dir, file_number_limit)
 
-    # Datetime
-    df['File start'] = datetime_from_filename(filename)
+    # If Directory does not exist
+    if not datafile_list:
+        return False
 
-    # Start time in h:m:s
-    df['Start (h:m:s)'] = df.apply(lambda row: str(datetime.timedelta(seconds= row['Start (s)'])), axis = 1)
+    datafile_list.sort()
 
-    dataframe_list.append(df)
+    print(datafile_list) # debug
 
-    print("Handled file " + filename)
+    dataframe_list = []
 
-# Combine per-file dataframes
-full_dataframe = pd.concat(dataframe_list, ignore_index=True)
 
-# Reorder columns
-new_index = ["Start (s)", "End (s)", "Common name", "Scientific name", "Filename", "File start", "Confidence", "Start (h:m:s)"]
-full_dataframe = full_dataframe[new_index]
+    ###################################
+    # Do batch operations for each file
+    for filename in datafile_list:
+        df = pd.read_csv(dir + "/" + filename)
 
-###################################
-# Get list of species with high confidence
-# this dataframe is named just "df" for shortness and convention
-df = full_dataframe[full_dataframe['Confidence'] >= filter_limit]
-
-# Shuffle, so that audio snippets represent a random sample of the calls 
-df = df.sample(frac=1).reset_index(drop = True)
-#df.reset_index(inplace = True, drop = True)
-
-# Count species occurrences
-species_list = df.groupby(['Scientific name']).size()
-# This makes a dataframe with 0 as the column name
-species_dataframe = pd.DataFrame(species_list)
-# Rename column
-species_dataframe.columns = ['Count']
-# Sot descending
-species_dataframe.sort_values("Count", ascending = False, inplace = True)
-
-###################################
-# Create Excel file
-writer = pd.ExcelWriter(export_file_path)
-
-full_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name="Predictions", freeze_panes=(1, 1))
-species_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name=filtered_species_sheet_name, freeze_panes=(1, 1))
-
-# Excel file settings
-#workbook  = writer.book
-worksheet_prediction = writer.sheets["Predictions"]
-worksheet_prediction.column_dimensions["D"].width = 20
-worksheet_prediction.column_dimensions["E"].width = 20
-worksheet_prediction.column_dimensions["F"].width = 20
-worksheet_prediction.column_dimensions["G"].width = 20
-
-worksheet_prediction.auto_filter.ref = worksheet_prediction.dimensions
-
-worksheet_species = writer.sheets[filtered_species_sheet_name]
-worksheet_species.column_dimensions["A"].width = 22
-
-writer.save()
-
-###################################
-# Create report
-
-# Pick rows to make segments of
-
-picked_taxa = dict()
-picked_rows = dict()
-
-# First >=0.9
-for index in range(len(df)):
-    sciname = df['Scientific name'].loc[index]
-
-    # Skip if non-Finnish
-    if taxa.is_non_finnish(sciname):
-        continue
-
-    # Skip if have enough
-    if sciname in picked_taxa:
-        if picked_taxa[sciname] >= max_segments_per_species:
+        # Skip empty files
+        if df.empty:
             continue
 
-    if (df['Confidence'].loc[index] >= 0.9):
-        picked_rows[index] = sciname
-        if sciname in picked_taxa:
-            picked_taxa[sciname] = picked_taxa[sciname] + 1
-        else:
-            picked_taxa[sciname] = 1
+        # ~Audio filename
+        df['Filename'] = audio_filename_from_filename(filename, file_extension)
 
-# Then 0.75-0.9
-for index in range(len(df)):
-    sciname = df['Scientific name'].loc[index]
+        # Datetime
+        df['File start'] = datetime_from_filename(filename)
 
-    # Skip if non-Finnish
-    if taxa.is_non_finnish(sciname):
-        continue
+        # Start time in h:m:s
+        df['Start (h:m:s)'] = df.apply(lambda row: str(datetime.timedelta(seconds= row['Start (s)'])), axis = 1)
 
-    # Skip if have enough
-    if sciname in picked_taxa:
-        if picked_taxa[sciname] >= max_segments_per_species:
+        dataframe_list.append(df)
+
+        print("Handled file " + filename)
+
+    # Combine per-file dataframes
+    full_dataframe = pd.concat(dataframe_list, ignore_index=True)
+
+    # Reorder columns
+    new_index = ["Start (s)", "End (s)", "Common name", "Scientific name", "Filename", "File start", "Confidence", "Start (h:m:s)"]
+    full_dataframe = full_dataframe[new_index]
+
+    ###################################
+    # Get list of species with high confidence
+    # this dataframe is named just "df" for shortness and convention
+    df = full_dataframe[full_dataframe['Confidence'] >= filter_limit]
+
+    # Shuffle, so that audio snippets represent a random sample of the calls 
+    df = df.sample(frac=1).reset_index(drop = True)
+    #df.reset_index(inplace = True, drop = True)
+
+    # Count species occurrences
+    species_list = df.groupby(['Scientific name']).size()
+    # This makes a dataframe with 0 as the column name
+    species_dataframe = pd.DataFrame(species_list)
+    # Rename column
+    species_dataframe.columns = ['Count']
+    # Sot descending
+    species_dataframe.sort_values("Count", ascending = False, inplace = True)
+
+    ###################################
+    # Create Excel file
+    writer = pd.ExcelWriter(export_file_path)
+
+    full_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name="Predictions", freeze_panes=(1, 1))
+    species_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name=filtered_species_sheet_name, freeze_panes=(1, 1))
+
+    # Excel file settings
+    #workbook  = writer.book
+    worksheet_prediction = writer.sheets["Predictions"]
+    worksheet_prediction.column_dimensions["D"].width = 20
+    worksheet_prediction.column_dimensions["E"].width = 20
+    worksheet_prediction.column_dimensions["F"].width = 20
+    worksheet_prediction.column_dimensions["G"].width = 20
+
+    worksheet_prediction.auto_filter.ref = worksheet_prediction.dimensions
+
+    worksheet_species = writer.sheets[filtered_species_sheet_name]
+    worksheet_species.column_dimensions["A"].width = 22
+
+    writer.save()
+
+    ###################################
+    # Create report
+
+    # Pick rows to make segments of
+
+    picked_taxa = dict()
+    picked_rows = dict()
+
+    # First >=0.9
+    for index in range(len(df)):
+        sciname = df['Scientific name'].loc[index]
+
+        # Skip if non-Finnish
+        if taxa.is_non_finnish(sciname):
             continue
 
-    if (df['Confidence'].loc[index] >= filter_limit and df['Confidence'].loc[index] < 0.9):
-        picked_rows[index] = sciname
+        # Skip if have enough
         if sciname in picked_taxa:
-            picked_taxa[sciname] = picked_taxa[sciname] + 1
-        else:
-            picked_taxa[sciname] = 1
+            if picked_taxa[sciname] >= max_segments_per_species:
+                continue
+
+        if (df['Confidence'].loc[index] >= 0.9):
+            picked_rows[index] = sciname
+            if sciname in picked_taxa:
+                picked_taxa[sciname] = picked_taxa[sciname] + 1
+            else:
+                picked_taxa[sciname] = 1
+
+    # Then 0.75-0.9
+    for index in range(len(df)):
+        sciname = df['Scientific name'].loc[index]
+
+        # Skip if non-Finnish
+        if taxa.is_non_finnish(sciname):
+            continue
+
+        # Skip if have enough
+        if sciname in picked_taxa:
+            if picked_taxa[sciname] >= max_segments_per_species:
+                continue
+
+        if (df['Confidence'].loc[index] >= filter_limit and df['Confidence'].loc[index] < 0.9):
+            picked_rows[index] = sciname
+            if sciname in picked_taxa:
+                picked_taxa[sciname] = picked_taxa[sciname] + 1
+            else:
+                picked_taxa[sciname] = 1
 
 
-# TODO: check if the audio subdir name is data or Data
+    # TODO: check if the audio subdir name is data or Data
 
-# Sort by taxon name by recreating the dictionary
-# https://stackoverflow.com/questions/613183/how-do-i-sort-a-dictionary-by-value
-picked_rows = {k: v for k, v in sorted(picked_rows.items(), key=lambda item: item[1])}
+    # Sort by taxon name by recreating the dictionary
+    # https://stackoverflow.com/questions/613183/how-do-i-sort-a-dictionary-by-value
+    picked_rows = {k: v for k, v in sorted(picked_rows.items(), key=lambda item: item[1])}
 
-print(picked_rows)
-print(picked_taxa)
+    print(picked_rows)
+    print(picked_taxa)
 
-segment_dir = dir + "/report"
-audio.create_dir(segment_dir)
-report = report.report(segment_dir)
-
-
-print("========================")
-html = ""
-
-prev_taxon = ""
-
-for index, sciname in picked_rows.items():
-    # Getting dataframe row as regular dict
-    # "records" makes this to return dict without index, [0] takes the first and only row
-    row = df.loc[[index]].to_dict("records")[0]
-#    print(row)
-
-#    print(row["Scientific name"])
-
-    if row["Scientific name"] != prev_taxon:
-        report.add_taxon_divider(row["Scientific name"])
-    prev_taxon = row["Scientific name"]
+    segment_dir = dir + "/report"
+    audio.create_dir(segment_dir)
+    bird_report = report.report(segment_dir)
 
 
-    audio_filepath = dir + "/Data/" + row['Filename']
-    start_sec = int(row['Start (s)'])
-    end_sec = int(row['End (s)'])
+    print("========================")
+    html = ""
 
-    props = dict(
-        audio_filepath = audio_filepath,
-        audio_filename = row['Filename'],
-        segment_dir = segment_dir,
-        start_sec = start_sec,
-        end_sec = end_sec,
-        scientific_name = row['Scientific name'],
-        confidence = row['Confidence'],
-        file_start_datetime = row['File start'],
-        segment_start = row['Start (h:m:s)']
-        )
+    prev_taxon = ""
 
-    segment_filename = audio.make_audio_segment(props)
+    for index, sciname in picked_rows.items():
+        # Getting dataframe row as regular dict
+        # "records" makes this to return dict without index, [0] takes the first and only row
+        row = df.loc[[index]].to_dict("records")[0]
+    #    print(row)
 
-    report.add_segment(props, segment_filename)
+    #    print(row["Scientific name"])
+
+        if row["Scientific name"] != prev_taxon:
+            bird_report.add_taxon_divider(row["Scientific name"])
+        prev_taxon = row["Scientific name"]
 
 
-#print(html)
+        audio_filepath = dir + "/Data/" + row['Filename']
+        start_sec = int(row['Start (s)'])
+        end_sec = int(row['End (s)'])
+
+        props = dict(
+            audio_filepath = audio_filepath,
+            audio_filename = row['Filename'],
+            segment_dir = segment_dir,
+            start_sec = start_sec,
+            end_sec = end_sec,
+            scientific_name = row['Scientific name'],
+            confidence = row['Confidence'],
+            file_start_datetime = row['File start'],
+            segment_start = row['Start (h:m:s)']
+            )
+
+        segment_filename = audio.make_audio_segment(props)
+
+        bird_report.add_segment(props, segment_filename)
+
+    return True
+
+    #print(html)
 
 
 
 
-#print(species.non_finnish_species) # debug
+    #print(species.non_finnish_species) # debug
+
+# For debugging, running this file from command line
+#handle_files("/mnt/c/Users/mikko/Documents/Audiomoth_2022/baimtest")

@@ -6,23 +6,28 @@ Spplication to convert bird sound analysis made with BirdNET into a more usable 
    * Number of predictions per species above given threshold, to allow seeing what are the common vs. less common species
 * HTML report page with five audio clips of each species. This makes it easy to check if predictions for each species is reliable or not.
 
-# Setup with venv
+
+# Setup
+
+### Initial setup
 
     git clone https://github.com/mikkohei13/baim.git
     apt install python3.10-venv
     python -m venv .venv
+
+### Start virtual environment
+
     source .venv/bin/activate
     pip install -r requirements.txt
 
     deactivate
 
-# Usage
+### Using from command line
 
 - Analyze audio files with BirdNET
 - Have birdNET result files in a root directory and audio files in Data directory 
 - Set path to directory to handle_files.py
-- Run python3 ´handle_files.py´
-
+- Run ´python3 handle_files.py´
 
 ### Compiling the app on Windows
 
