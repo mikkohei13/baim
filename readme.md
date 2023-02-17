@@ -23,6 +23,12 @@ Spplication to convert bird sound analysis made with BirdNET into a more usable 
 - Set path to directory to handle_files.py
 - Run python3 ´handle_files.py´
 
+
+### Creatuing GUI app
+
+- ´apt-get install python3-tk´
+
+
 # How it works
 
 Creating audio snipperts & spectrograms of species
