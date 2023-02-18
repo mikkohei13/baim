@@ -41,7 +41,7 @@ def run_application():
     # Perform some time-consuming task here...
     # If there's an error, birdnet_file_count is False, and segment_file_count contains error message
     # TODO: return tuple/dict instead, with specific error value
-    birdnet_file_count, segment_file_count = handle_files.handle_files(dir, threshold)
+    birdnet_file_count, segment_file_count = handle_files.handle_files(dir, threshold, version)
 
     if False == birdnet_file_count:
         status_label.configure(text = segment_file_count)

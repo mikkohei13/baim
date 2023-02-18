@@ -2,7 +2,7 @@ from datetime import datetime
 
 class report():
 
-    def __init__(self, dir_path):
+    def __init__(self, dir_path, version):
 
         self._report_path = dir_path + "/_report.html"
 
@@ -19,7 +19,7 @@ class report():
         </head>
         <body>
         <h1>""" + dir_path + """</h1>
-        <p>Generated """ + current_time + """</p>
+        <p>Generated """ + current_time + """ with version """ + version + """</p>
         """
 
         f = open(self._report_path, "w+")

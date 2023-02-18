@@ -90,8 +90,10 @@ def audio_filename_from_filename(filename, file_extension):
     return parts[0] + "." + file_extension
 
 
-def handle_files(dir, threshold):
+def handle_files(dir, threshold, version = "unknown"):
 
+    # Remove trailing slash, if user has given it
+    dir = dir.rstrip("/")
     audiofile_dir = "Data"
 
     pd.io.formats.excel.ExcelFormatter.header_style = None
@@ -104,8 +106,11 @@ def handle_files(dir, threshold):
 
     ###################################
     # Setup
+
+    # include subdir name into the Excel filename, so that it can be identified out of context as well.
     subdir_name = dir[(dir.rindex("/") + 1):]
-    export_file_path = dir + "/_baim_" + subdir_name + ".xlsx"
+    excel_file_path = dir + "/_baim_" + subdir_name + ".xlsx"
+#    exit(excel_file_path)
 
     filtered_species_sheet_name = "Species conf " + str(filter_limit)
 
@@ -181,7 +186,8 @@ def handle_files(dir, threshold):
 
     ###################################
     # Create Excel file
-    writer = pd.ExcelWriter(export_file_path)
+    open(excel_file_path, 'w').close()
+    writer = pd.ExcelWriter(excel_file_path)
 
     full_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name="Predictions", freeze_panes=(1, 1))
     species_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name=filtered_species_sheet_name, freeze_panes=(1, 1))
@@ -261,7 +267,7 @@ def handle_files(dir, threshold):
 
     segment_dir = dir + "/report"
     audio.create_dir(segment_dir)
-    bird_report = report.report(segment_dir)
+    bird_report = report.report(segment_dir, version)
 
 
     print("========================")
@@ -315,5 +321,5 @@ def handle_files(dir, threshold):
     #print(species.non_finnish_species) # debug
 
 # For debugging, running this file from command line
-handle_files("/mnt/c/Users/mikko/Documents/Audiomoth_2022/baimtest", 0.75)
-#handle_files("/mnt/c/Users/mikko/Documents/Audiomoth_2021/20211202-03-Halias", 0.75)
+handle_files("/mnt/c/Users/mikko/Documents/Audiomoth_2022/baimtest2/", 0.75, "command line")
+#handle_files("/mnt/c/Users/mikko/Documents/Audiomoth_2021/20211202-03-Halias", 0.75, "command line")
