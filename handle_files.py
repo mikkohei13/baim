@@ -16,7 +16,7 @@ def get_datafile_list(directory, file_number_limit):
         objects = os.listdir(directory)
     except FileNotFoundError:
         print('Directory not found')
-        return False
+        return False, "Directory not found"
     else:
 #        print(files)
         i = 0
@@ -103,6 +103,7 @@ def handle_files(dir, threshold):
 
     ###################################
     # Do batch operations for each file
+    birdnet_file_count = 0
     for filename in datafile_list:
         df = pd.read_csv(dir + "/" + filename)
 
@@ -121,6 +122,7 @@ def handle_files(dir, threshold):
 
         dataframe_list.append(df)
 
+        birdnet_file_count = birdnet_file_count + 1
         print("Handled file " + filename)
 
     # Combine per-file dataframes
@@ -238,6 +240,7 @@ def handle_files(dir, threshold):
 
     prev_taxon = ""
 
+    segment_file_count = 0
     for index, sciname in picked_rows.items():
         # Getting dataframe row as regular dict
         # "records" makes this to return dict without index, [0] takes the first and only row
@@ -268,10 +271,11 @@ def handle_files(dir, threshold):
             )
 
         segment_filename = audio.make_audio_segment(props)
+        segment_file_count = segment_file_count + 1
 
         bird_report.add_segment(props, segment_filename)
 
-    return True
+    return birdnet_file_count, segment_file_count
 
     #print(html)
 
