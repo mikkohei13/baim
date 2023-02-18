@@ -14,12 +14,13 @@ Spplication to convert bird sound analysis made with BirdNET into a more usable 
     git clone https://github.com/mikkohei13/baim.git
     apt install python3.10-venv
     python -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements.txt
+    (install Tkinter)
 
 ### Start virtual environment
 
     source .venv/bin/activate
-    pip install -r requirements.txt
-
     deactivate
 
 ### Using from command line
@@ -40,7 +41,7 @@ Spplication to convert bird sound analysis made with BirdNET into a more usable 
 
 # How it works
 
-Creating audio snipperts & spectrograms of species
+Creating audio snippets & spectrograms of species
 
 - Have list of non-finnish species
 - Have a prediction dataframe
@@ -71,6 +72,13 @@ Creating audio snipperts & spectrograms of species
         - filename
         - times (also in ISO format that Vihko uses)
 - Save html report
+
+### Expectations
+
+- BirdNET files are in the csv format provided by birdnet
+- All audio files have same file extension. This can be wav, mp3 or flac
+- Audio filenames are in format created by Audiomoth (3 versions) or Wildlife Acoustics SM4
+
 
 # Todo:
 

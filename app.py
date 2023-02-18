@@ -39,10 +39,12 @@ def run_application():
     root.update()
 
     # Perform some time-consuming task here...
+    # If there's an error, birdnet_file_count is False, and segment_file_count contains error message
+    # TODO: return tuple/dict instead, with specific error value
     birdnet_file_count, segment_file_count = handle_files.handle_files(dir, threshold)
 
     if False == birdnet_file_count:
-        status_label.configure(text="Directory not found.")
+        status_label.configure(text = segment_file_count)
     else:
         status_label.configure(text = f"Process finished, analyzed { birdnet_file_count } BirdNET files and created { segment_file_count } audio segments. \nThe results are in directory { dir }\n\nReady to process more files.")
 

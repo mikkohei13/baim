@@ -9,16 +9,37 @@ import audio
 import report
 
 
+# Expects that all audio files have same extention. Does not work for multiple filetypes in the same directory.
+def get_audiofiles_extension(directory):
+    try:
+        objects = os.listdir(directory)
+    except FileNotFoundError:
+        print('Audio dir not found')
+        return False
+    else:
+        print("Here")
+        print(objects) # debug
+        for filename in objects:
+            if filename.lower().endswith(".wav"):
+                return "wav"
+            if filename.lower().endswith(".mp3"):
+                return "mp3"
+            if filename.lower().endswith(".flac"):
+                return "flac"
+
+        return False
+
+
 def get_datafile_list(directory, file_number_limit):
     datafile_list = []
 
     try:
         objects = os.listdir(directory)
     except FileNotFoundError:
-        print('Directory not found')
-        return False, "Directory not found"
+        print('Data dir not found')
+        return False
     else:
-#        print(files)
+#        print(objects) # debug
         i = 0
         for filename in objects:
             if filename.lower().endswith(".results.csv"):
@@ -64,22 +85,22 @@ def datetime_from_filename(filename):
 
 
 def audio_filename_from_filename(filename, file_extension):
-    # Have to have file extension as parameter provided by user, since it's not available on the Birdnet analysis files
+    # Have to have file extension as parameter, since it's not available on the Birdnet analysis files
     parts = filename.split(".")
     return parts[0] + "." + file_extension
 
 
 def handle_files(dir, threshold):
 
+    audiofile_dir = "Data"
+
     pd.io.formats.excel.ExcelFormatter.header_style = None
+#    sys.path.append('/path/to/ffmpeg')
 
-    file_extension = "wav" # Don't include dot here
-
-    file_number_limit = 2000 # Limit for debugging
     filter_limit = float(threshold)
 
+    file_number_limit = 2000 # Limit for debugging
     max_segments_per_species = 5
-
 
     ###################################
     # Setup
@@ -88,18 +109,26 @@ def handle_files(dir, threshold):
 
     filtered_species_sheet_name = "Species conf " + str(filter_limit)
 
+    file_extension = get_audiofiles_extension(dir + "/" + audiofile_dir)
+
+    # If no audiofiles found
+    if not file_extension:
+        return False, f"No supported audio files found from { dir }. Files have to have .wav, .mp3 or .flac extension."
+
+
     datafile_list = get_datafile_list(dir, file_number_limit)
 
     # If Directory does not exist
     if not datafile_list:
-        return False
+        return False, f"Directory { dir } does not exist."
+
+    print(file_extension)
+    print(datafile_list)
 
     datafile_list.sort()
-
-    print(datafile_list) # debug
+#    print(datafile_list) # debug
 
     dataframe_list = []
-
 
     ###################################
     # Do batch operations for each file
@@ -254,13 +283,14 @@ def handle_files(dir, threshold):
         prev_taxon = row["Scientific name"]
 
 
-        audio_filepath = dir + "/Data/" + row['Filename']
+        audio_filepath = f"{ dir }/{ audiofile_dir }/{ row['Filename'] }"
         start_sec = int(row['Start (s)'])
         end_sec = int(row['End (s)'])
 
         props = dict(
             audio_filepath = audio_filepath,
             audio_filename = row['Filename'],
+            file_extension = file_extension,
             segment_dir = segment_dir,
             start_sec = start_sec,
             end_sec = end_sec,
@@ -285,4 +315,5 @@ def handle_files(dir, threshold):
     #print(species.non_finnish_species) # debug
 
 # For debugging, running this file from command line
-#handle_files("/mnt/c/Users/mikko/Documents/Audiomoth_2022/baimtest")
+#handle_files("/mnt/c/Users/mikko/Documents/Audiomoth_2022/baimtest", 0.75)
+#handle_files("/mnt/c/Users/mikko/Documents/Audiomoth_2021/20211202-03-Halias", 0.75)
