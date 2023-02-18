@@ -34,10 +34,12 @@ Spplication to convert bird sound analysis made with BirdNET into a more usable 
 
 - Setup Python on Windows
 - Set Python to Powershell profile
-- Copy files to Windows: ´cp -r ./ /mnt/c/Users/mikko/Documents/compile/´
-- Install requirements: ´pip install -r requirements.txt´
-- Compile the app: ´pyinstaller --windowed --add-data "baim-icon.png;." --onefile app.py´
+- Copy files to Windows (no subdirectories): ´cp ./baim/* /mnt/c/Users/mikko/Documents/compile/´
+- With Powershell:
+   - Install requirements: ´pip install -r requirements.txt´
+   - Compile the app:
 
+    pyinstaller --windowed --onefile app.py --add-data "C:/Users/mikko/AppData/Local/Programs/Python/Python310/Lib/site-packages/librosa/util/example_data/registry.txt;librosa/util/example_data" --add-data "C:/Users/mikko/AppData/Local/Programs/Python/Python310/Lib/site-packages/librosa/util/example_data/index.json;librosa/util/example_data" --add-data "baim-icon.png;." --distpath "C:/Users/mikko/Desktop/"  --hidden-import "sklearn.metrics._pairwise_distances_reduction._datasets_pair" --hidden-import "sklearn.metrics._pairwise_distances_reduction._middle_term_computer"
 
 # How it works
 
