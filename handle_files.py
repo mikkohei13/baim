@@ -321,5 +321,5 @@ def handle_files(dir, threshold, version = "unknown"):
     #print(species.non_finnish_species) # debug
 
 # For debugging, running this file from command line
-handle_files("/mnt/c/Users/mikko/Documents/Audiomoth_2022/baimtest2/", 0.75, "command line")
+#handle_files("/mnt/c/Users/mikko/Documents/Audiomoth_2022/baimtest2/", 0.75, "command line")
 #handle_files("/mnt/c/Users/mikko/Documents/Audiomoth_2021/20211202-03-Halias", 0.75, "command line")

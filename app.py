@@ -35,7 +35,7 @@ def run_application():
 
 
     # Update the status label to show that the process has started
-    status_label.configure(text="Processing files now...")
+    status_label.configure(text=f"Processing files from { dir } ...")
     root.update()
 
     # Perform some time-consuming task here...
