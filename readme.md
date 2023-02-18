@@ -80,17 +80,17 @@ Creating audio snippets & spectrograms of species
 - Audio filenames are in format created by Audiomoth (3 versions) or Wildlife Acoustics SM4
 
 
-# Todo:
-
-Handle flac and mp3 files
+# Todo
 
 DONE: Randomixe dataframe order before picking segments? To avoid having 5+ segments of the same local bird.
 
 To get most probable identifications, sort by confidence desc.
 To get a sample of all identifications above the threshold, shuffle, to get good idea of the variety.
 
-Exceliin sarakkeiksi mysö:
+Exceliin sarakkeiksi myös:
 Laji - Määritys	Määrä - Havainto	Pesimävarmuusindeksi - Havainto	Lisätiedot - Havainto	Kokoelma/Avainsanat - Havainto
 
+### Ideas
 
+Filter low-frequency noise, unless predicted species has low frequency (botste, owls...)
 
