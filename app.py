@@ -63,7 +63,7 @@ def validate_float(new_value):
         return False
 
 
-version = "0.1.2 / 2023-02-18"
+version = "0.2 / 2023-02-18"
 placeholder_threshold = 0.75
 
 window_width_px = 600

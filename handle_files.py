@@ -311,6 +311,10 @@ def handle_files(dir, threshold, version = "unknown"):
 
         bird_report.add_segment(props, segment_filename)
 
+
+    bird_report.finalize()
+    print("Finished!")
+
     return birdnet_file_count, segment_file_count
 
     #print(html)
