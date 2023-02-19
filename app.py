@@ -72,8 +72,12 @@ logo_width_px = 140
 
 
 root = tk.Tk()
-root.geometry(f"{ window_width_px }x{ window_height_px }")
 root.title("BAIM")
+
+icon_image = tk.PhotoImage(file = resource_path("baim-icon.png"))
+root.iconphoto(False, icon_image)
+
+root.geometry(f"{ window_width_px }x{ window_height_px }")
 root.configure(background="#E6E8E9")
 root.option_add("*foreground", "#0A5061")
 root.option_add("*background", "#E6E8E9")
