@@ -96,9 +96,6 @@ def handle_files(dir, threshold, version = "unknown"):
     dir = dir.rstrip("/")
     audiofile_dir = "Data"
 
-    pd.io.formats.excel.ExcelFormatter.header_style = None
-#    sys.path.append('/path/to/ffmpeg')
-
     filter_limit = float(threshold)
 
     file_number_limit = 2000 # Limit for debugging
@@ -110,7 +107,6 @@ def handle_files(dir, threshold, version = "unknown"):
     # include subdir name into the Excel filename, so that it can be identified out of context as well.
     subdir_name = dir[(dir.rindex("/") + 1):]
     excel_file_path = dir + "/_baim_" + subdir_name + ".xlsx"
-#    exit(excel_file_path)
 
     filtered_species_sheet_name = "Species conf " + str(filter_limit)
 
@@ -185,27 +181,29 @@ def handle_files(dir, threshold, version = "unknown"):
     species_dataframe.sort_values("Count", ascending = False, inplace = True)
 
     ###################################
-    # Create Excel file
-    open(excel_file_path, 'w').close()
-    writer = pd.ExcelWriter(excel_file_path)
+    # Create and configure Excel writer
+    with pd.ExcelWriter(excel_file_path, engine='openpyxl') as writer:
+        # Write DataFrames to Excel
+        full_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name="Predictions", freeze_panes=(1, 1))
+        species_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name=filtered_species_sheet_name, freeze_panes=(1, 1))
 
-    full_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name="Predictions", freeze_panes=(1, 1))
-    species_dataframe.to_excel(writer, index=True, index_label="Row", sheet_name=filtered_species_sheet_name, freeze_panes=(1, 1))
+        # Accessing the workbook and worksheets
+        workbook = writer.book
+        worksheet_prediction = writer.sheets["Predictions"]
+        worksheet_species = writer.sheets[filtered_species_sheet_name]
 
-    # Excel file settings
-    #workbook  = writer.book
-    worksheet_prediction = writer.sheets["Predictions"]
-    worksheet_prediction.column_dimensions["D"].width = 20
-    worksheet_prediction.column_dimensions["E"].width = 20
-    worksheet_prediction.column_dimensions["F"].width = 20
-    worksheet_prediction.column_dimensions["G"].width = 20
+        # Set column widths for 'Predictions' sheet
+        column_widths = {'D': 20, 'E': 20, 'F': 20, 'G': 20}
+        for col, width in column_widths.items():
+            worksheet_prediction.column_dimensions[col].width = width
 
-    worksheet_prediction.auto_filter.ref = worksheet_prediction.dimensions
+        # Set auto-filter for 'Predictions' sheet
+        worksheet_prediction.auto_filter.ref = worksheet_prediction.dimensions
 
-    worksheet_species = writer.sheets[filtered_species_sheet_name]
-    worksheet_species.column_dimensions["A"].width = 22
+        # Set column width for 'FilteredSpecies' sheet
+        worksheet_species.column_dimensions["A"].width = 22
 
-    writer.save()
+    # File is automatically saved when exiting the 'with' block
 
     ###################################
     # Create report
@@ -326,4 +324,5 @@ def handle_files(dir, threshold, version = "unknown"):
 
 # For debugging, running this file from command line
 #handle_files("/mnt/c/Users/mikko/Documents/Audiomoth_2022/baimtest2/", 0.75, "command line")
-#handle_files("/mnt/c/Users/mikko/Documents/Audiomoth_2021/20211202-03-Halias", 0.75, "command line")
+handle_files("/mnt/c/Users/mikko/Documents/Audiomoth_2024/20240523-0607-Starrängen", 0.75, "command line 2024-07-03")
+
